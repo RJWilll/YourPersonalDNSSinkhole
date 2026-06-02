@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="PersonalDNSSinkhole/PersonalDNSSinkhole.csproj" />
+  <Project Path="PersonalSinkholeWeb/PersonalSinkholeWeb.csproj" />
+  <Project Path="SinkholeLibrary/SinkholeLibrary.csproj" />
+</Solution>
