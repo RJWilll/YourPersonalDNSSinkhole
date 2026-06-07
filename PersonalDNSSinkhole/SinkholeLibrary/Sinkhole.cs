@@ -24,56 +24,38 @@ namespace SinkholeLibrary
 
         public void Start()
         {
-            // 1. Initialize the serial port configuration
-            SerialPort mySerialPort = new SerialPort("53")
+            var listener = new UdpClient(53);
+            var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
+
+            Debug.WriteLine("DNS proxy running...");
+
+            while (true)
             {
-                BaudRate = 9600,
-                Parity = Parity.None,
-                StopBits = StopBits.One,
-                DataBits = 8
-            };
-            mySerialPort.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
-            mySerialPort.Open();
+                var sender = new IPEndPoint(IPAddress.Any, 53);
+                byte[] query = listener.Receive(ref sender);
 
-        }
+                string domain = ParseDomainFromQuery(query);
+                NewDomain(this, domain);
+                byte[] response = { };
 
-        public static void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
-        {
-            SerialPort sp = (SerialPort)sender;
-            string data = sp.ReadExisting();
-            Debug.WriteLine(data);
+                if (DatabaseHandler.IsDomain(domain))
+                {
+                    //die
+                    response = BuildBlockedResponse(query);
+                }
+                else
+                {
+                    //pass
+                    response = BuildPassResponse(query, upstream);
+                }
 
-            //var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
-
-            //while (true)
-            //{
-            //    var sender = new IPEndPoint(IPAddress.Any, 0);
-            //    byte[] query = listener.Receive(ref sender);
-
-            //    string domain = ParseDomainFromQuery(query);
-            //    NewDomain?.Invoke(sender, domain);
-
-            //    if (DatabaseHandler.IsDomain(domain))
-            //    {
-            //        byte[] blocked = BuildBlockedResponse(query);
-            //        listener.Send(blocked, blocked.Length, sender);
-            //    }
-            //    else
-            //    {
-            //        // Forward to real DNS and relay response
-            //        using var forwarder = new UdpClient();
-            //        forwarder.Send(query, query.Length, upstream);
-            //        var upstreamSender = new IPEndPoint(IPAddress.Any, 0);
-            //        byte[] response = forwarder.Receive(ref upstreamSender);
-            //        listener.Send(response, response.Length, sender);
-            //    }
-            //}
+                listener.Send(response, response.Length, sender); 
+            }
         }
 
         private string ParseDomainFromQuery(byte[] query)
         {
-            // Simple DNS query parser to extract the domain name
-            int pos = 12; // Skip DNS header
+            int pos = 12; 
             StringBuilder domain = new StringBuilder();
             while (query[pos] != 0)
             {
@@ -94,6 +76,17 @@ namespace SinkholeLibrary
             response[6] = 0x00;
             response[7] = 0x01;
             
+            return response;
+        }
+
+        private byte[] BuildPassResponse(byte[] query, IPEndPoint upstream)
+        {
+            using var forwarder = new UdpClient();
+            forwarder.Send(query, query.Length, upstream);
+
+            var upstreamSender = new IPEndPoint(IPAddress.Any, 0);
+            byte[] response = forwarder.Receive(ref upstreamSender);
+
             return response;
         }
     }

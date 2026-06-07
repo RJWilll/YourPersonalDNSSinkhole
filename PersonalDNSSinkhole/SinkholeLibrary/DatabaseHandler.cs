@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 
@@ -9,7 +10,8 @@ namespace SinkholeLibrary
     public static class DatabaseHandler
     {
         // The path to the SQLite database file. It is located in the parent directory of the application.
-        public static string DB_PATH = $"Data Source={Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName}\\personalSinkhole.db";
+        public static string HEAD_PATH = $"{Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName}";
+        public static string DB_PATH = $"Data Source={HEAD_PATH}\\personalSinkhole.db";
 
         // Initializes the database by creating necessary tables if they do not exist.
         public static void InitializeDatabase()
@@ -25,6 +27,10 @@ namespace SinkholeLibrary
             """;
             cmd.ExecuteNonQuery();
 
+            //will take a while
+            //DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\blocklist.txt");
+            //DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\adblocklist.txt");
+            DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\personalblocklist.txt");
         }
 
         public static void AddNewDomain(string domain)
@@ -62,9 +68,27 @@ namespace SinkholeLibrary
             """;
             cmd.Parameters.AddWithValue("$domain", domain);
             cmd.ExecuteNonQuery();
-            
+
             var result = cmd.ExecuteScalar();
             return Convert.ToInt32(result) > 0;
+        }
+
+        public static void AddTextFileToDB(string dest)
+        {
+            using (FileStream fileStream = new FileStream(dest, FileMode.Open, FileAccess.Read))
+            {
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                    while(!reader.EndOfStream)
+                    {
+                        string textContent = reader.ReadLine();
+                        if(textContent != string.Empty && !IsDomain(textContent))
+                        {
+                            DatabaseHandler.AddNewDomain(textContent);
+                        }
+                    }
+                }
+            }
         }
     }
 }
