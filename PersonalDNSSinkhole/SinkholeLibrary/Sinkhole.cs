@@ -5,8 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
-using System.Net;
-using System.Net.Sockets;
 using System.IO.Ports;
 using System.Diagnostics;
 
@@ -15,6 +13,8 @@ namespace SinkholeLibrary
     public class Sinkhole
     {
         public event EventHandler<string> NewDomain;
+        public bool powerSwitch;
+
 
         public Sinkhole()
         {
@@ -22,35 +22,48 @@ namespace SinkholeLibrary
         }
 
 
-        public void Start()
+        public async void Start()
         {
             var listener = new UdpClient(53);
             var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
 
             Debug.WriteLine("DNS proxy running...");
+            powerSwitch = true;
 
-            while (true)
+            while (powerSwitch)
             {
-                var sender = new IPEndPoint(IPAddress.Any, 53);
-                byte[] query = listener.Receive(ref sender);
+                var result = await listener.ReceiveAsync();
+                byte[] query = result.Buffer;
+                var sender = result.RemoteEndPoint;
 
-                string domain = ParseDomainFromQuery(query);
-                NewDomain(this, domain);
-                byte[] response = { };
-
-                if (DatabaseHandler.IsDomain(domain))
-                {
-                    //die
-                    response = BuildBlockedResponse(query);
-                }
-                else
-                {
-                    //pass
-                    response = BuildPassResponse(query, upstream);
-                }
-
-                listener.Send(response, response.Length, sender); 
+                HandleDomainAsync(query, upstream, listener, sender);
             }
+        }
+
+        private async void HandleDomainAsync(byte[] query, IPEndPoint upstream, UdpClient listener, IPEndPoint sender)
+        {
+            string domain = ParseDomainFromQuery(query);
+            NewDomain(this, domain);
+
+            byte[] response = { };
+
+            if (DatabaseHandler.IsDomain(domain))
+            {
+                //die
+                response = BuildBlockedResponse(query);
+            }
+            else
+            {
+                //pass
+                response = BuildPassResponse(query, upstream);
+            }
+
+            await listener.SendAsync(response, response.Length, sender);
+        }
+
+        public void Stop()
+        {
+            powerSwitch = false;
         }
 
         private string ParseDomainFromQuery(byte[] query)
