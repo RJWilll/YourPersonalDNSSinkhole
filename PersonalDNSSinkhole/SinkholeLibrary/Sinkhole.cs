@@ -15,12 +15,10 @@ namespace SinkholeLibrary
         public event EventHandler<string> NewDomain;
         public bool powerSwitch;
 
-
         public Sinkhole()
         {
             NewDomain = delegate { };
         }
-
 
         public async void Start()
         {
@@ -44,6 +42,8 @@ namespace SinkholeLibrary
         {
             string domain = ParseDomainFromQuery(query);
             NewDomain(this, domain);
+            int wasBlocked = 0;
+            var stopwatch = Stopwatch.StartNew();
 
             byte[] response = { };
 
@@ -51,6 +51,7 @@ namespace SinkholeLibrary
             {
                 //die
                 response = BuildBlockedResponse(query);
+                wasBlocked++;
             }
             else
             {
@@ -58,6 +59,7 @@ namespace SinkholeLibrary
                 response = BuildPassResponse(query, upstream);
             }
 
+            DatabaseHandler.AddLog(domain, GetQueryType(query), wasBlocked, (int)stopwatch.ElapsedMilliseconds);
             await listener.SendAsync(response, response.Length, sender);
         }
 
@@ -78,6 +80,33 @@ namespace SinkholeLibrary
                 pos += len;
             }
             return domain.ToString().TrimEnd('.');
+        }
+
+        private string GetQueryType(byte[] query)
+        {
+            // Question section starts at byte 12
+            // Type is the last 2 bytes of the QNAME + QTYPE
+            // Skip header (12 bytes) + domain name (variable, ends at 0x00)
+            int i = 12;
+            while (i < query.Length && query[i] != 0) i++;
+            i++; // skip the null terminator
+
+            if (i + 2 > query.Length) return "UNKNOWN";
+
+            int qtype = (query[i] << 8) | query[i + 1];
+
+            return qtype switch
+            {
+                1 => "A",
+                2 => "NS",
+                5 => "CNAME",
+                15 => "MX",
+                16 => "TXT",
+                28 => "AAAA",
+                33 => "SRV",
+                255 => "ANY",
+                _ => $"TYPE{qtype}"
+            };
         }
 
         private byte[] BuildBlockedResponse(byte[] query)
