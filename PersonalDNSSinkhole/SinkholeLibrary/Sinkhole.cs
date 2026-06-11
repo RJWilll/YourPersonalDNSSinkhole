@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.IO.Ports;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 
 namespace SinkholeLibrary
 {
@@ -26,6 +27,7 @@ namespace SinkholeLibrary
             var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
 
             Debug.WriteLine("DNS proxy running...");
+            SetDnsToProxy();
             powerSwitch = true;
 
             while (powerSwitch)
@@ -59,18 +61,19 @@ namespace SinkholeLibrary
                 response = BuildPassResponse(query, upstream);
             }
 
-            DatabaseHandler.AddLog(domain, GetQueryType(query), wasBlocked, (int)stopwatch.ElapsedMilliseconds);
+            DatabaseHandler.AddLogAsync(domain, GetQueryType(query), wasBlocked, (int)stopwatch.ElapsedMilliseconds);
             await listener.SendAsync(response, response.Length, sender);
         }
 
         public void Stop()
         {
             powerSwitch = false;
+            RestoreDns();
         }
 
         private string ParseDomainFromQuery(byte[] query)
         {
-            int pos = 12; 
+            int pos = 12;
             StringBuilder domain = new StringBuilder();
             while (query[pos] != 0)
             {
@@ -84,12 +87,9 @@ namespace SinkholeLibrary
 
         private string GetQueryType(byte[] query)
         {
-            // Question section starts at byte 12
-            // Type is the last 2 bytes of the QNAME + QTYPE
-            // Skip header (12 bytes) + domain name (variable, ends at 0x00)
             int i = 12;
             while (i < query.Length && query[i] != 0) i++;
-            i++; // skip the null terminator
+            i++;
 
             if (i + 2 > query.Length) return "UNKNOWN";
 
@@ -112,12 +112,12 @@ namespace SinkholeLibrary
         private byte[] BuildBlockedResponse(byte[] query)
         {
             byte[] response = new byte[query.Length + 16];
-            Array.Copy(query, response, query.Length); 
-            response[2] = 0x81; 
+            Array.Copy(query, response, query.Length);
+            response[2] = 0x81;
             response[3] = 0x80;
             response[6] = 0x00;
             response[7] = 0x01;
-            
+
             return response;
         }
 
@@ -131,5 +131,41 @@ namespace SinkholeLibrary
 
             return response;
         }
+
+        public static void SetDnsToProxy()
+        {
+            string? networkAdapter = GetActiveAdapter();
+            RunNetsh($"interface ip set dns \"{networkAdapter}\" static 127.0.0.1");
+        }
+
+        public static void RestoreDns()
+        {
+            string? networkAdapter = GetActiveAdapter();
+            RunNetsh($"interface ip set dns \"{networkAdapter}\" dhcp");
+        }
+
+        private static void RunNetsh(string args)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "netsh",
+                Arguments = args,
+                Verb = "runas",          // elevate if needed
+                UseShellExecute = true,
+                CreateNoWindow = true
+            };
+            using var process = Process.Start(psi);
+            process?.WaitForExit();
+        }
+
+        private static string? GetActiveAdapter()
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .FirstOrDefault(n =>
+                    n.OperationalStatus == OperationalStatus.Up &&
+                    n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                ?.Name;
+        }
+    
     }
 }

@@ -1,14 +1,16 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class DataAnalysisHandler
 {
-    private readonly string _dbPath;
+    private string _dbPath;
 
     public DataAnalysisHandler(string dbPath)
     {
-        _dbPath = dbPath;
+        _dbPath = "Data Source=" + dbPath;
+        Debug.WriteLine(Path.GetFullPath(_dbPath));
     }
 
     private SqliteConnection GetConnection()
@@ -26,7 +28,7 @@ public class DataAnalysisHandler
             SELECT AVG(daily_count) FROM (
                 SELECT COUNT(*) AS daily_count
                 FROM logs
-                GROUP BY DATE(Timestamp)
+                GROUP BY DATE(Date)
             )";
         var result = cmd.ExecuteScalar();
         return result == DBNull.Value ? 0 : Convert.ToDouble(result);
@@ -45,7 +47,7 @@ public class DataAnalysisHandler
         using var con = GetConnection();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"
-            SELECT CAST(strftime('%H', Timestamp) AS INTEGER) AS hour, COUNT(*) AS count
+            SELECT CAST(strftime('%H', Time) AS INTEGER) AS hour, COUNT(*) AS count
             FROM logs
             GROUP BY hour
             ORDER BY hour";
@@ -75,12 +77,12 @@ public class DataAnalysisHandler
         using var con = GetConnection();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"
-            SELECT 
-                DATE(Timestamp) AS date,
+            SELECT
+                Date AS date,
                 100.0 * SUM(WasBlocked) / COUNT(*) AS block_rate
             FROM logs
-            GROUP BY date
-            ORDER BY date";
+            GROUP BY Date
+            ORDER BY Date";
 
         var results = new List<(string, double)>();
         using var reader = cmd.ExecuteReader();
@@ -115,9 +117,9 @@ public class DataAnalysisHandler
         using var con = GetConnection();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"
-            SELECT Timestamp, Domain
+            SELECT Date, Domain
             FROM logs
-            ORDER BY Timestamp DESC
+            ORDER BY Date DESC
             LIMIT 1";
 
         using var reader = cmd.ExecuteReader();
@@ -134,7 +136,7 @@ public class DataAnalysisHandler
         cmd.CommandText = @"
             SELECT COUNT(DISTINCT Domain)
             FROM logs
-            WHERE DATE(Timestamp) = DATE('now')";
+            WHERE DATE(Date) = DATE('now')";
         return Convert.ToInt64(cmd.ExecuteScalar());
     }
 
@@ -143,7 +145,7 @@ public class DataAnalysisHandler
         using var con = GetConnection();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"
-            SELECT CAST(strftime('%H', Timestamp) AS INTEGER) AS hour, COUNT(*) AS count
+            SELECT CAST(substr(Time, 1, 2) AS INTEGER) AS hour, COUNT(*) AS count
             FROM logs
             GROUP BY hour
             ORDER BY count DESC

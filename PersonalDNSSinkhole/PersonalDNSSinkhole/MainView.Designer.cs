@@ -30,8 +30,8 @@
         {
             richTextBox1 = new RichTextBox();
             label2 = new Label();
-            button1 = new Button();
             button2 = new Button();
+            checkBox1 = new CheckBox();
             SuspendLayout();
             // 
             // richTextBox1
@@ -56,22 +56,10 @@
             label2.TabIndex = 4;
             label2.Text = "DNS Addresses";
             // 
-            // button1
-            // 
-            button1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            button1.Location = new Point(14, 240);
-            button1.Margin = new Padding(3, 4, 3, 4);
-            button1.Name = "button1";
-            button1.Size = new Size(86, 31);
-            button1.TabIndex = 5;
-            button1.Text = "Start";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
-            // 
             // button2
             // 
             button2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            button2.Location = new Point(106, 240);
+            button2.Location = new Point(166, 240);
             button2.Name = "button2";
             button2.Size = new Size(178, 31);
             button2.TabIndex = 6;
@@ -79,18 +67,30 @@
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
             // 
+            // checkBox1
+            // 
+            checkBox1.AutoSize = true;
+            checkBox1.Location = new Point(12, 244);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(148, 24);
+            checkBox1.TabIndex = 7;
+            checkBox1.Text = "Use Personal DNS";
+            checkBox1.UseVisualStyleBackColor = true;
+            checkBox1.CheckedChanged += checkBox1_CheckedChanged;
+            // 
             // MainView
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(527, 275);
+            Controls.Add(checkBox1);
             Controls.Add(button2);
-            Controls.Add(button1);
             Controls.Add(label2);
             Controls.Add(richTextBox1);
             Margin = new Padding(3, 4, 3, 4);
             Name = "MainView";
             Text = "Form1";
+            FormClosing += MainView_FormClosing;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -99,7 +99,7 @@
 
         private RichTextBox richTextBox1;
         private Label label2;
-        private Button button1;
         private Button button2;
+        private CheckBox checkBox1;
     }
 }

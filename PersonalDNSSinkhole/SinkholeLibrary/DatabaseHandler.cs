@@ -27,8 +27,8 @@ namespace SinkholeLibrary
 
                 CREATE TABLE IF NOT EXISTS logs (
                     Id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Date        TEXT NOT NULL
-                    Time   TEXT NOT NULL,
+                    Date        TEXT NOT NULL,
+                    Time        TEXT NOT NULL,
                     Domain      TEXT NOT NULL,
                     QueryType   TEXT,
                     WasBlocked  INTEGER NOT NULL,  -- 0 or 1
@@ -101,11 +101,11 @@ namespace SinkholeLibrary
             }
         }
 
-        public static void AddLog(string domain, string type, int isBlocked, int responseTime)
+        public static async void AddLogAsync(string domain, string type, int isBlocked, int responseTime)
         {
             using var con = new SqliteConnection(DB_PATH);
-            con.Open();
-            using var cmd = con.CreateCommand();
+            con.OpenAsync();
+            using var cmd = con.CreateCommand();    
             cmd.CommandText = """
                 INSERT INTO logs (Date, Time, Domain, QueryType, WasBlocked, ResponseMs) VALUES ($Date, $Time, $Domain, $Querytype, $WasBlocked, $ResponseMs);
             """;
@@ -116,7 +116,7 @@ namespace SinkholeLibrary
             cmd.Parameters.AddWithValue("$WasBlocked", isBlocked);
             cmd.Parameters.AddWithValue("$ResponseMs", responseTime);
 
-            cmd.ExecuteNonQuery();
+            cmd.ExecuteNonQueryAsync();
         }
     }
 }

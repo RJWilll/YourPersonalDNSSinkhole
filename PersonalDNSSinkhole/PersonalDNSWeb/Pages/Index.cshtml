@@ -1,0 +1,28 @@
+﻿@page
+@model IndexModel
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="blockRateChart"></canvas>
+<script>
+    const labels = [@Html.Raw(string.Join(",", Model.BlockRateOverTime.Select(x => $"\"{x.Date}\"")))];
+    const data   = [@Html.Raw(string.Join(",", Model.BlockRateOverTime.Select(x => x.BlockRate.ToString("F1"))))];
+
+    new Chart(document.getElementById('blockRateChart'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Block Rate %', data }] }
+    });
+</script>
+
+<table>
+    <tr><th>Domain</th><th>Queries</th></tr>
+    @foreach (var (domain, count) in Model.TopDomains)
+    {
+        <tr><td>@domain</td><td>@count</td></tr>
+    }
+</table>

@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="PersonalDNSSinkhole/PersonalDNSSinkhole.csproj" />
-  <Project Path="PersonalSinkholeWeb/PersonalSinkholeWeb.csproj" />
+  <Project Path="PersonalDNSWeb/PersonalDNSWeb.csproj" Id="9c729ded-69fc-43a1-9726-47be0b882f72" />
   <Project Path="SinkholeLibrary/SinkholeLibrary.csproj" />
 </Solution>

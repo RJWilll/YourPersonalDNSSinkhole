@@ -30,5 +30,23 @@ namespace PersonalDNSSinkhole
             PersonalBlocklist blockPage = new PersonalBlocklist();
             blockPage.Show();
         }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.checkBox1.Checked)
+            {
+                hole.Start();
+            }
+            else
+            {
+                hole.Stop();
+            }
+        }
+
+        //When the app is closing
+        private void MainView_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            hole.Stop();
+        }
     }
 }
