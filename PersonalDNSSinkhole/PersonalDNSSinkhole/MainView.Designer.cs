@@ -32,6 +32,7 @@
             label2 = new Label();
             button2 = new Button();
             checkBox1 = new CheckBox();
+            button1 = new Button();
             SuspendLayout();
             // 
             // richTextBox1
@@ -78,18 +79,29 @@
             checkBox1.UseVisualStyleBackColor = true;
             checkBox1.CheckedChanged += checkBox1_CheckedChanged;
             // 
+            // button1
+            // 
+            button1.Location = new Point(350, 240);
+            button1.Name = "button1";
+            button1.Size = new Size(106, 31);
+            button1.TabIndex = 8;
+            button1.Text = "View Stats";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click_1;
+            // 
             // MainView
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(527, 275);
+            Controls.Add(button1);
             Controls.Add(checkBox1);
             Controls.Add(button2);
             Controls.Add(label2);
             Controls.Add(richTextBox1);
             Margin = new Padding(3, 4, 3, 4);
             Name = "MainView";
-            Text = "Form1";
+            Text = "YourDNSSinkhole";
             FormClosing += MainView_FormClosing;
             ResumeLayout(false);
             PerformLayout();
@@ -101,5 +113,6 @@
         private Label label2;
         private Button button2;
         private CheckBox checkBox1;
+        private Button button1;
     }
 }

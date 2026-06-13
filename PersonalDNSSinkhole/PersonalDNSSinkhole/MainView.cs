@@ -48,5 +48,11 @@ namespace PersonalDNSSinkhole
         {
             hole.Stop();
         }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            StatsPage statsPage = new StatsPage();
+            statsPage.Show();
+        }
     }
 }
