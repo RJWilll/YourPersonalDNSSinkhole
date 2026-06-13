@@ -39,7 +39,7 @@ namespace SinkholeLibrary
 
             //will take a while
             //DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\blocklist.txt");
-            //DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\adblocklist.txt");
+            DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\adblocklist.txt");
             DatabaseHandler.AddTextFileToDB($"{HEAD_PATH}\\personalblocklist.txt");
         }
 
@@ -92,7 +92,8 @@ namespace SinkholeLibrary
                     while(!reader.EndOfStream)
                     {
                         string textContent = reader.ReadLine();
-                        if(textContent != string.Empty && !IsDomain(textContent))
+                        textContent = textContent.Replace("0.0.0.0 ", string.Empty);
+                        if (textContent != string.Empty && !IsDomain(textContent))
                         {
                             DatabaseHandler.AddNewDomain(textContent);
                         }

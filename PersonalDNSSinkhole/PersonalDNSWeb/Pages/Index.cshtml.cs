@@ -23,7 +23,7 @@ namespace PersonalDNSWeb.Pages
 
         public void OnGet()
         {
-            _analytics = new DataAnalysisHandler($"C:\\Users\\reedj\\random_git_repos\\YourPersonalDNSSinkhole\\PersonalDNSSinkhole\\personalSinkhole.db");
+            _analytics = new DataAnalysisHandler($"C:\\Users\\reedj\\random_github_repos\\YourPersonalDNSSinkhole\\PersonalDNSSinkhole\\personalSinkhole.db");
             TotalQueries = _analytics.GetTotalQueries();
             AvgQueriesPerDay = _analytics.GetAverageQueriesPerDay();
             BlockRate = _analytics.GetBlockRate();

@@ -25,6 +25,7 @@ namespace SinkholeLibrary
         {
             var listener = new UdpClient(53);
             var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
+            Sinkhole.KillPortProcess(53);
 
             Debug.WriteLine("DNS proxy running...");
             SetDnsToProxy();
@@ -32,11 +33,27 @@ namespace SinkholeLibrary
 
             while (powerSwitch)
             {
-                var result = await listener.ReceiveAsync();
-                byte[] query = result.Buffer;
-                var sender = result.RemoteEndPoint;
+                //var result = await listener.ReceiveAsync();
+                //byte[] query = result.Buffer;
+                //var sender = result.RemoteEndPoint;
 
-                HandleDomainAsync(query, upstream, listener, sender);
+                //HandleDomainAsync(query, upstream, listener, sender);
+
+                try
+                {
+                    var result = await listener.ReceiveAsync();
+                    byte[] query = result.Buffer;
+                    var sender = result.RemoteEndPoint;
+                    HandleDomainAsync(query, upstream, listener, sender);
+                }
+                catch (SocketException ex)
+                {
+                    Debug.WriteLine($"Socket error: {ex.Message} — rebinding...");
+                    listener.Dispose();
+                    await Task.Delay(500); 
+                    KillPortProcess(53); 
+                    listener = new UdpClient(53);
+                }
             }
         }
 
@@ -166,6 +183,55 @@ namespace SinkholeLibrary
                     n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
                 ?.Name;
         }
-    
+
+        public static void StopDnsCacheService()
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/c net stop dnscache",
+                UseShellExecute = true,
+                Verb = "runas",
+                CreateNoWindow = true
+            };
+            using var p = Process.Start(psi);
+            p?.WaitForExit();
+        }
+
+        public static void KillPortProcess(int port = 53)
+        {
+            // find PID using the port
+            var findPid = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c netstat -ano | findstr :{port}",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(findPid)!;
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            // parse each line for the PID
+            foreach (var line in output.Split('\n'))
+            {
+                if (!line.Contains($":{port}")) continue;
+
+                var parts = line.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 5) continue;
+
+                if (int.TryParse(parts[^1], out int pid) && pid != 0)
+                {
+                    try
+                    {
+                        Process.GetProcessById(pid).Kill();
+                        Console.WriteLine($"Killed PID {pid} on port {port}");
+                    }
+                    catch { /* process already dead or access denied */ }
+                }
+            }
+        }
     }
 }
