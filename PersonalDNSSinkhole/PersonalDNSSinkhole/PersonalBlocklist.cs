@@ -41,6 +41,7 @@ namespace PersonalDNSSinkhole
             if(this.textBox1.Text != string.Empty)
             {
                 this.listBox1.Items.Add(this.textBox1.Text);
+                DatabaseHandler.AddNewDomain(this.textBox1.Text);
             }
         }
 
@@ -49,6 +50,7 @@ namespace PersonalDNSSinkhole
             //delete button
             if(this.listBox1.SelectedItem?.ToString() != string.Empty)
             {
+                DatabaseHandler.DeleteDomain(this.listBox1.GetItemText(listBox1.SelectedItem));
                 this.listBox1.Items.RemoveAt(this.listBox1.SelectedIndex);
             }
         }

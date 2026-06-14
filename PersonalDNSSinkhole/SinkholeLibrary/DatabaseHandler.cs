@@ -45,6 +45,11 @@ namespace SinkholeLibrary
 
         public static void AddNewDomain(string domain)
         {
+            if (DatabaseHandler.IsDomain(domain))
+            {
+                return;
+            }
+
             using var con = new SqliteConnection(DB_PATH);
             con.Open();
             var cmd = con.CreateCommand();
@@ -58,6 +63,11 @@ namespace SinkholeLibrary
 
         public static void DeleteDomain(string domain)
         {
+            if(!DatabaseHandler.IsDomain(domain))
+            {
+                return;
+            }
+
             using var con = new SqliteConnection(DB_PATH);
             con.Open();
             var cmd = con.CreateCommand();

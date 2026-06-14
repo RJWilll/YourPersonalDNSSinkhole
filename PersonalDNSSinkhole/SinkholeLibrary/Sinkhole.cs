@@ -25,20 +25,16 @@ namespace SinkholeLibrary
         {
             var listener = new UdpClient(53);
             var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
-            Sinkhole.KillPortProcess(53);
 
             Debug.WriteLine("DNS proxy running...");
             SetDnsToProxy();
             powerSwitch = true;
 
+            Sinkhole.StopDnsCacheService();
+            Sinkhole.KillPortProcess(53);
+
             while (powerSwitch)
             {
-                //var result = await listener.ReceiveAsync();
-                //byte[] query = result.Buffer;
-                //var sender = result.RemoteEndPoint;
-
-                //HandleDomainAsync(query, upstream, listener, sender);
-
                 try
                 {
                     var result = await listener.ReceiveAsync();
@@ -50,7 +46,7 @@ namespace SinkholeLibrary
                 {
                     Debug.WriteLine($"Socket error: {ex.Message} — rebinding...");
                     listener.Dispose();
-                    await Task.Delay(500); 
+                    await Task.Delay(100); 
                     KillPortProcess(53); 
                     listener = new UdpClient(53);
                 }
@@ -167,7 +163,7 @@ namespace SinkholeLibrary
             {
                 FileName = "netsh",
                 Arguments = args,
-                Verb = "runas",          // elevate if needed
+                Verb = "runas",          
                 UseShellExecute = true,
                 CreateNoWindow = true
             };

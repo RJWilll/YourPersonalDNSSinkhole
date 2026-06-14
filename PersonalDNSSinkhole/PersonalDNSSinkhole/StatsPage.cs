@@ -24,7 +24,7 @@ namespace PersonalDNSSinkhole
 
         public void SetupStats()
         {
-            _analytics = new DataAnalysisHandler($"C:\\Users\\reedj\\random_github_repos\\YourPersonalDNSSinkhole\\PersonalDNSSinkhole\\personalSinkhole.db");
+            _analytics = new DataAnalysisHandler($"{Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName}\\personalSinkhole.db");
             this.label11.Text = _analytics.GetTotalQueries().ToString();
             this.label12.Text = _analytics.GetAverageQueriesPerDay().ToString();
             this.label13.Text = _analytics.GetBlockRate().ToString();

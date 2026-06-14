@@ -35,7 +35,6 @@ namespace PersonalDNSSinkhole
         {
             if (this.checkBox1.Checked)
             {
-                Sinkhole.StopDnsCacheService();
                 hole.Start();
             }
             else
