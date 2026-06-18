@@ -6,8 +6,8 @@ adblocker and ability to add and remove more domains from a blocklist. Builds da
 trends with your personal domain traffic.
 
 # How to use
-Open up Visual studio project files (no release build yet), run, and press checkbox to start it up. The program will prompt
-you for admin permissions to switch your personal Wi-fi DNS to localhost. 
+Open up Visual studio project files, run, and press checkbox to start it up. The program will prompt
+you for admin permissions to switch your personal Wi-fi DNS to localhost. Modify personal blocklist and see stats with UI.
 
 # How it Works
 The program uses a local SQLite database for both the current domain blocklist and the log updates for data analysis. If the
