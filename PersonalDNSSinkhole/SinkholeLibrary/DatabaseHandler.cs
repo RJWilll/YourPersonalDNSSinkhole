@@ -45,6 +45,11 @@ namespace SinkholeLibrary
 
         public static void AddNewDomain(string domain)
         {
+            if (DatabaseHandler.IsDomain(domain))
+            {
+                return;
+            }
+
             using var con = new SqliteConnection(DB_PATH);
             con.Open();
             var cmd = con.CreateCommand();
@@ -58,6 +63,11 @@ namespace SinkholeLibrary
 
         public static void DeleteDomain(string domain)
         {
+            if(!DatabaseHandler.IsDomain(domain))
+            {
+                return;
+            }
+
             using var con = new SqliteConnection(DB_PATH);
             con.Open();
             var cmd = con.CreateCommand();
@@ -85,21 +95,31 @@ namespace SinkholeLibrary
 
         public static void AddTextFileToDB(string dest)
         {
-            using (FileStream fileStream = new FileStream(dest, FileMode.Open, FileAccess.Read))
+            var domains = File.ReadAllLines(dest)
+                .Select(line => line.Replace("0.0.0.0 ", string.Empty).Trim())
+                .Where(domain => domain != string.Empty &&
+                                 !domain.StartsWith("#") &&
+                                 !IsDomain(domain))
+                .ToList();
+
+            DatabaseHandler.AddNewDomainsBatch(domains); // insert all at once
+        }
+
+        public static void AddNewDomainsBatch(List<string> domains)
+        {
+            using var connection = new SqliteConnection(DB_PATH);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            foreach (var domain in domains)
             {
-                using (StreamReader reader = new StreamReader(fileStream))
-                {
-                    while(!reader.EndOfStream)
-                    {
-                        string textContent = reader.ReadLine();
-                        textContent = textContent.Replace("0.0.0.0 ", string.Empty);
-                        if (textContent != string.Empty && !IsDomain(textContent))
-                        {
-                            DatabaseHandler.AddNewDomain(textContent);
-                        }
-                    }
-                }
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "INSERT OR IGNORE INTO domains (domain) VALUES (@domain)";
+                cmd.Parameters.AddWithValue("@domain", domain);
+                cmd.ExecuteNonQuery();
             }
+
+            transaction.Commit();
         }
 
         public static async void AddLogAsync(string domain, string type, int isBlocked, int responseTime)

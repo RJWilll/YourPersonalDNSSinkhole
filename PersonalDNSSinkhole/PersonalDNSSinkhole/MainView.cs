@@ -35,8 +35,8 @@ namespace PersonalDNSSinkhole
         {
             if (this.checkBox1.Checked)
             {
-                Sinkhole.StopDnsCacheService();
                 hole.Start();
+                WipeTextBox();
             }
             else
             {
@@ -54,6 +54,12 @@ namespace PersonalDNSSinkhole
         {
             StatsPage statsPage = new StatsPage();
             statsPage.Show();
+        }
+
+        public async void WipeTextBox()
+        {
+            await Task.Delay(5000);
+            this.richTextBox1.Text = string.Empty;
         }
     }
 }
