@@ -38,6 +38,8 @@
             // richTextBox1
             // 
             richTextBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            richTextBox1.DetectUrls = false;
+            richTextBox1.ImeMode = ImeMode.NoControl;
             richTextBox1.Location = new Point(12, 29);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;

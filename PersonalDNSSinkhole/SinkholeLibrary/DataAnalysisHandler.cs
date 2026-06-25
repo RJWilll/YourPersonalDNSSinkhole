@@ -134,9 +134,10 @@ public class DataAnalysisHandler
         using var con = GetConnection();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"
-            SELECT COUNT(DISTINCT Domain)
-            FROM logs
-            WHERE DATE(Date) = DATE('now')";
+        SELECT COUNT(DISTINCT Domain)
+        FROM logs
+        WHERE Date = @today";
+        cmd.Parameters.AddWithValue("@today", DateTime.Now.ToString("MM/dd/yyyy"));
         return Convert.ToInt64(cmd.ExecuteScalar());
     }
 

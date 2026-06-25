@@ -12,6 +12,12 @@ namespace PersonalDNSSinkhole
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             Application.Run(new MainView());
+
+            //Create personal blocklist file if it doesn't exist
+            if (!File.Exists($"{Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName}\\personalblocklist.txt"))
+            {
+                File.Create($"{Directory.GetParent(AppContext.BaseDirectory).Parent.Parent.Parent.Parent.FullName}\\personalblocklist.txt").Close();
+            }
         }
     }
 }

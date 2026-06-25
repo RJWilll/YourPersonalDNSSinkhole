@@ -1,11 +1,4 @@
 ﻿using SinkholeLibrary;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
 
 namespace PersonalDNSSinkhole
 {
@@ -58,7 +51,7 @@ namespace PersonalDNSSinkhole
         private void button3_Click(object sender, EventArgs e)
         {
             //save button
-            using (FileStream fileStream = new FileStream(BLOCK_PATH, FileMode.Open, FileAccess.Write))
+            using (FileStream fileStream = new FileStream(BLOCK_PATH, FileMode.Create, FileAccess.Write))
             {
                 using (var writer = new StreamWriter(fileStream))
                 {

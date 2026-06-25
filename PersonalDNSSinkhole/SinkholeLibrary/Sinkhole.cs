@@ -15,6 +15,7 @@ namespace SinkholeLibrary
     {
         public event EventHandler<string> NewDomain;
         public bool powerSwitch;
+        private UdpClient listener;
 
         public Sinkhole()
         {
@@ -23,7 +24,10 @@ namespace SinkholeLibrary
 
         public async void Start()
         {
-            var listener = new UdpClient(53);
+            Sinkhole.KillPortProcess(53);
+            await Task.Delay(150);
+
+            listener = new UdpClient(53);
             var upstream = new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53);
 
             Debug.WriteLine("DNS proxy running...");
@@ -31,7 +35,6 @@ namespace SinkholeLibrary
             powerSwitch = true;
 
             Sinkhole.StopDnsCacheService();
-            Sinkhole.KillPortProcess(53);
 
             while (powerSwitch)
             {
@@ -42,11 +45,15 @@ namespace SinkholeLibrary
                     var sender = result.RemoteEndPoint;
                     HandleDomainAsync(query, upstream, listener, sender);
                 }
+                catch (ObjectDisposedException)
+                {
+                    break; // listener was disposed by Stop() — exit cleanly
+                }
                 catch (SocketException ex)
                 {
                     Debug.WriteLine($"Socket error: {ex.Message} — rebinding...");
                     listener.Dispose();
-                    await Task.Delay(100); 
+                    await Task.Delay(150); 
                     KillPortProcess(53); 
                     listener = new UdpClient(53);
                 }
@@ -81,6 +88,7 @@ namespace SinkholeLibrary
         public void Stop()
         {
             powerSwitch = false;
+            listener.Dispose();
             RestoreDns();
         }
 
@@ -88,6 +96,7 @@ namespace SinkholeLibrary
         {
             int pos = 12;
             StringBuilder domain = new StringBuilder();
+            string domainStr = string.Empty;
             while (query[pos] != 0)
             {
                 int len = query[pos];
@@ -95,7 +104,13 @@ namespace SinkholeLibrary
                 domain.Append(Encoding.ASCII.GetString(query, pos, len) + ".");
                 pos += len;
             }
-            return domain.ToString().TrimEnd('.');
+            domainStr = domain.ToString().TrimEnd('.');
+            domainStr = domainStr.Replace("www.", string.Empty);
+            if(domainStr.IndexOf("/") != -1)
+            {
+                domainStr = domainStr.Substring(0, domainStr.IndexOf("/"));
+            }
+            return domainStr;
         }
 
         private string GetQueryType(byte[] query)
